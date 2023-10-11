@@ -62,7 +62,7 @@ app.post('/users/new', (req, res) => {
 })
 ```
 
-### Adição dos endpoints PUT e DELETE
+### Criação de uma lista de usuários temporária
 
 > Até agora nossa Web API não é capaz de armazenar dados, pois não dispõe de nenhum serviço de BD.
 >
@@ -72,12 +72,34 @@ app.post('/users/new', (req, res) => {
 ```typescript
 ...
 type User = {
+  id: number
   name: string
   email: string
 }
 
 const users: User[] = []
 ...
+```
+
+1. Altere o endpoint GET para obter os usuários da lista *users*, conforme o código a seguir:
+```typescript
+app.get('/users', (req, res) => {
+  return res.json(users)
+})
+```
+
+1. Altere o endpoint POST para inserir os novos usuários na lista *users*.
+```typescript
+app.post('/users/new', (req, res) => {
+  const newUser: User = req.body
+
+  newUser.id = users.length + 1
+
+  users.push(newUser)
+  console.log(users)
+
+  return res.json({ message: 'Usuário criado com sucesso', user: newUser })
+})
 ```
 
 1. Adicione o endpoint PUT logo após o endpoint POST, com o seguinte código:
@@ -89,5 +111,39 @@ app.put('/users/edit/:id', (req, res) => {
   console.log(id, name, email)
 
   return res.json({ message: 'Usuário atualizado com sucesso', user: { id, name, email } })
+})
+```
+
+### Adição dos endpoints PUT e DELETE
+
+1. Adicione o endpoint PUT para atualizar os dados do usuário, conforme o código a seguir:
+```typescript
+app.put('/users/edit/:id', (req, res) => {
+  const { id } = req.params
+  const { name, email } = req.body
+
+  const user = users.find(user => user.id === Number(id))
+
+  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' })
+
+  user.name = name
+  user.email = email
+
+  return res.json({ message: 'Usuário atualizado com sucesso', user: { id, name, email } })
+})
+```
+
+1. O endpoint DELETE é similar ao endpoint PUT. Para adicioná-lo, basta seguir o código a seguir:
+```typescript
+app.delete('/users/delete/:id', (req, res) => {
+  const { id } = req.params
+
+  const user = users.find(user => user.id === Number(id))
+
+  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' })
+
+  users.splice(users.indexOf(user), 1)
+
+  return res.status(204).send()
 })
 ```
